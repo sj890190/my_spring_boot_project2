@@ -47,14 +47,14 @@ public class AgriFisheryProductsTransTypeTypeRunner implements CommandLineRunner
 
         if(agriFisheryProductsTransTypeType == null){
             //都沒資料時, 建立2年內的所有資料
-            startDate = today.minusYears(2);
+            startDate = today.minusDays(1);
         }else{
             //檢查資料是否為最新狀態
             startDate = agriFisheryProductsTransTypeType.getTranDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         }
         long daysDiff = startDate.until(today, ChronoUnit.DAYS);
 
-        if(startDate.until(today, ChronoUnit.DAYS) -1 > 0){
+        if(daysDiff > 0){
             log.info("today: {}, startDate: {}, diffDays: {}", today, startDate, daysDiff);
             agriFisheryProductsTransTypeTypeService.getAllData(startDate, daysDiff);
         }
