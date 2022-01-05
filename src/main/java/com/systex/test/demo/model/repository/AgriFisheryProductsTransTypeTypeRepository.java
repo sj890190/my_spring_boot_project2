@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AgriFisheryProductsTransTypeTypeRepository extends CrudRepository<AgriFisheryProductsTransTypeType, String> {
-    AgriFisheryProductsTransTypeType findTopByOrderByTranDate();
+    AgriFisheryProductsTransTypeType findTopByOrderByTranDateDesc();
 }

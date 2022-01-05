@@ -7,24 +7,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 @Slf4j
 @Component
-@Order(value=3)
+@Order(value=4)
 public class AgriFisheryProductsTransTypeTypeRunner implements CommandLineRunner {
     @Autowired
     AgriFisheryProductsTransTypeTypeRepository agriFisheryProductsTransTypeTypeRepository;
@@ -42,7 +35,7 @@ public class AgriFisheryProductsTransTypeTypeRunner implements CommandLineRunner
         LocalDate today = LocalDate.now();
         LocalDate startDate;
 
-        AgriFisheryProductsTransTypeType agriFisheryProductsTransTypeType = agriFisheryProductsTransTypeTypeRepository.findTopByOrderByTranDate();
+        AgriFisheryProductsTransTypeType agriFisheryProductsTransTypeType = agriFisheryProductsTransTypeTypeRepository.findTopByOrderByTranDateDesc();
         //log.info("" + agriFisheryProductsTransTypeType.getTranDate());
 
         if(agriFisheryProductsTransTypeType == null){
@@ -56,7 +49,7 @@ public class AgriFisheryProductsTransTypeTypeRunner implements CommandLineRunner
 
         if(daysDiff > 0){
             log.info("today: {}, startDate: {}, diffDays: {}", today, startDate, daysDiff);
-            agriFisheryProductsTransTypeTypeService.getAllData(startDate, daysDiff);
+            agriFisheryProductsTransTypeTypeService.setAllData(startDate, daysDiff);
         }
     }
 }
