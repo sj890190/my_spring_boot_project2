@@ -62,7 +62,7 @@ public class ProdTypeService {
                 ProdType prodType = mapper.readValue(node.toString(), ProdType.class);
                 prodType.setProdType(type);
 
-                //log.info(prodType.toString());
+                log.info(prodType.toString());
                 prodTypeList.add(prodType);
 
                 if (prodTypeList.size() > 500) {

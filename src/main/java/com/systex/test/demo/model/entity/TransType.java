@@ -17,7 +17,7 @@ import java.util.Date;
 
 @Slf4j
 @Data
-@Table(name = "agri_products_trans_type")
+@Table(name = "trans_type")
 @Entity
 @IdClass(TransTypeRelationPK.class)
 @NoArgsConstructor

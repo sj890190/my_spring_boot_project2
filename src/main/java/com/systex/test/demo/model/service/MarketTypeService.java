@@ -61,7 +61,7 @@ public class MarketTypeService {
                 MarketType marketType = mapper.readValue(node.toString(), MarketType.class);
                 marketType.setMarketType(type);
 
-                //log.info(MarketType.toString());
+                log.info(marketType.toString());
                 marketTypeList.add(marketType);
 
                 if (marketTypeList.size() > 500) {
@@ -69,6 +69,8 @@ public class MarketTypeService {
                     marketTypeList.clear();
                 }
             }
+            marketTypeRepository.saveAll(marketTypeList);
+            marketTypeList.clear();
         }
     }
 }

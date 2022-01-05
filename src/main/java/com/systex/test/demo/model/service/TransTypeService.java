@@ -108,7 +108,7 @@ public class TransTypeService {
                     transType.setTranDate(transType.getTransDate().toString());
                     transType.setProdType(type);
 
-                    //log.info(agriFisheryProductsTransTypeType.toString());
+                    log.info(transType.toString());
                     agriFisherList.add(transType);
 
                     if (agriFisherList.size() > 500) {
@@ -116,6 +116,8 @@ public class TransTypeService {
                         agriFisherList.clear();
                     }
                 }
+                transTypeRepository.saveAll(agriFisherList);
+                agriFisherList.clear();
             }
         }
 
