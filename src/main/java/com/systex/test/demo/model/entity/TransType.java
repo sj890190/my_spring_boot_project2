@@ -69,10 +69,10 @@ public class TransType {
     public void setTranDate(String d) throws ParseException {
         d = d.replace(".","");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String day = d.substring(d.length() - 2);
-        d = d.substring(0, d.length() - day.length() - 1);
-        String month = d.substring(d.length() - 2);
-        d = d.substring(0, d.length() - month.length() - 1);
+        String day = d.substring(d.length() - 2, d.length());
+        d = d.substring(0, d.length() - day.length());
+        String month = d.substring(d.length() - 2, d.length());
+        d = d.substring(0, d.length() - month.length());
         String year = String.valueOf((Integer.parseInt(d) + 1911));
         String date = year + "-" + month + "-" + day;
         this.tranDate = sdf.parse(date);

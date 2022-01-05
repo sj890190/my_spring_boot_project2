@@ -1,6 +1,6 @@
---DROP TABLE IF EXISTS prod_type;
---DROP TABLE IF EXISTS trans_type;
---DROP TABLE IF EXISTS market_type;
+DROP TABLE IF EXISTS prod_type;
+DROP TABLE IF EXISTS trans_type;
+DROP TABLE IF EXISTS market_type;
 
 CREATE TABLE market_type (
     market_type VARCHAR(1),
