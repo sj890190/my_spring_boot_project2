@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.systex.test.demo.model.entity.primaryKey.TransTypeRelationPK;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,9 +20,9 @@ import java.util.Date;
 @Data
 @Table(name = "trans_type")
 @Entity
-@IdClass(TransTypeRelationPK.class)
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(TransTypeRelationPK.class)
 public class TransType {
     @Id
     @Column(length = 1)
@@ -43,7 +44,6 @@ public class TransType {
     @Column(length = 10)
     @JsonProperty(value = "MarketCode")
     private String marketCode;// string 市場代號
-    @Id
     @Column(length = 100)
     @JsonProperty(value = "MarketName")
     private String marketName;// string 市場名稱
@@ -64,14 +64,15 @@ public class TransType {
     @Column(length = 10)
     @JsonIgnore
     @DateTimeFormat(pattern = "yyyy-MM-dd T HH:mm:ss")
+    @ApiModelProperty(required = true, dataType = "java.time.LocalDate")
     private Date tranDate;// string 交易日期
 
     public void setTranDate(String d) throws ParseException {
         d = d.replace(".","");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String day = d.substring(d.length() - 2, d.length());
+        String day = d.substring(d.length() - 2);
         d = d.substring(0, d.length() - day.length());
-        String month = d.substring(d.length() - 2, d.length());
+        String month = d.substring(d.length() - 2);
         d = d.substring(0, d.length() - month.length());
         String year = String.valueOf((Integer.parseInt(d) + 1911));
         String date = year + "-" + month + "-" + day;

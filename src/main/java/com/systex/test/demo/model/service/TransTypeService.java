@@ -5,17 +5,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.entity.ProdType;
 import com.systex.test.demo.model.entity.TransType;
+import com.systex.test.demo.model.repository.MarketTypeRepository;
 import com.systex.test.demo.model.repository.ProdTypeRepository;
 import com.systex.test.demo.model.repository.TransTypeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+
+import static com.systex.test.demo.config.DateConverter.DATE_TO_LOCALDATE;
+import static com.systex.test.demo.config.DateConverter.LOCALDATE_TO_STRING;
 
 @Slf4j
 @Service
@@ -26,12 +32,18 @@ public class TransTypeService {
     @Autowired
     ProdTypeRepository prodTypeRepository;
 
-    public void setAllData(LocalDate startDate, Long daysDiff) throws IOException, ParseException, InterruptedException {
-        //設置參數 - 農
-        initApiType(startDate, daysDiff, "農");
+    @Autowired
+    MarketTypeRepository marketTypeRepository;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    public void setAllData(LocalDate startDate, Long daysDiff) throws IOException, ParseException, InterruptedException {
         //設置參數 - 漁
         initApiType(startDate, daysDiff, "漁");
+
+        //設置參數 - 農
+        initApiType(startDate, daysDiff, "農");
     }
 
     public void initApiType(LocalDate startDate, Long daysDiff, String type)
@@ -53,9 +65,7 @@ public class TransTypeService {
         for(int day= 0; day<=daysDiff; day++){
             Map<String, String> params = new HashMap<>();
             LocalDate findDate = startDate.plusDays(day);
-            String tranDate = (findDate.getYear() - 1911) + symbol
-                    + String.format("%02d", findDate.getMonthValue()) + symbol
-                    + String.format("%02d", findDate.getDayOfMonth());
+            String tranDate = LOCALDATE_TO_STRING(findDate, symbol);
             params.put("start_date", tranDate);
             params.put("end_date", tranDate);
 
@@ -66,7 +76,36 @@ public class TransTypeService {
                 initApiInfo(url, params, type, startDate);
             }
         }
+    }
 
+    public void initApiType(Date startDate, Date endDate, String type, String prodName, String marketName)
+            throws ParseException, JsonProcessingException, InterruptedException {
+        LocalDate start_date = DATE_TO_LOCALDATE(startDate);
+        LocalDate end_date = DATE_TO_LOCALDATE(endDate);
+
+        String url = "";
+        String symbol = "";
+        long daysDiff = start_date.until(end_date, ChronoUnit.DAYS);
+
+        //設置參數 - 農
+        if(type.equals("農")){
+            url = "https://data.coa.gov.tw/api/v1/AgriProductsTransType/?" +
+                    "Start_time={start_date}&End_time={end_date}&CropName={prod_name}&MarketName={market_name}";
+            symbol = ".";
+        }
+
+        for(int day= 0; day<=daysDiff; day++){
+            Map<String, String> params = new HashMap<>();
+            LocalDate findDate = start_date.plusDays(day);
+            String tranDate = LOCALDATE_TO_STRING(findDate, symbol);
+
+            params.put("start_date", tranDate);
+            params.put("end_date", tranDate);
+            params.put("prod_name", prodName);
+            params.put("market_name", marketName);
+            log.info(url);
+            initApiInfo(url, params, type, start_date);
+        }
     }
 
     public void initApiInfo(String url, Map<String, String> params, String type, LocalDate startDate)
@@ -86,7 +125,6 @@ public class TransTypeService {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode jsonParentNode = mapper.readTree(body);
 
-
         if (jsonParentNode.at("/Next").asText().equals("true")) {
             //有分頁, 需要增加API的參數
             log.info("Has Next: True!!!!!!!!!!!!");
@@ -99,6 +137,7 @@ public class TransTypeService {
 
                 //data不為空, 且沒有分頁可以存入資料庫
                 Iterator<JsonNode> elements = jsonChildNode.elements();
+                Map<String, String> map = new HashMap<>();
                 while (elements.hasNext()) {
                     //擷取子節點
                     JsonNode node = elements.next();
@@ -120,6 +159,14 @@ public class TransTypeService {
                 agriFisherList.clear();
             }
         }
+    }
 
+    public List<Map<String, Object>> queryExercise(String sql, Object[] o) {
+        log.info("queryExercise=================");
+        for(int i = 0; i<o.length; i++){
+            log.info(o[i].toString());
+        }
+        List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, o);
+        return res;
     }
 }

@@ -48,7 +48,7 @@ public class TransTypeRunner implements CommandLineRunner {
 
         if(daysDiff > 0){
             log.info("today: {}, startDate: {}, diffDays: {}", today, startDate, daysDiff);
-            transTypeTypeService.setAllData(startDate, daysDiff);
+            //transTypeTypeService.setAllData(startDate, daysDiff);
         }
         log.info("TransType Finished");
     }
