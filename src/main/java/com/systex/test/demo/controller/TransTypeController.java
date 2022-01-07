@@ -1,31 +1,22 @@
 package com.systex.test.demo.controller;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.repository.TransTypeRepository;
+import com.systex.test.demo.model.runner.TransTypeRunner;
 import com.systex.test.demo.model.service.TransTypeService;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.text.ParseException;
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
-import static com.systex.test.demo.config.DateConverter.DATE_TO_LOCALDATE;
-
 @Slf4j
+@CrossOrigin
 @RestController
 @RequestMapping("/api/TransType")
 public class TransTypeController {
@@ -42,9 +33,11 @@ public class TransTypeController {
     @ResponseBody
     @GetMapping("/queryExercise_01")
     public JsonNode getExercise01(@RequestParam(value = "Start_Date", defaultValue = "2022-01-05") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_start,
-                                  @RequestParam(value = "End_Date", defaultValue = "2022-01-06") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_end)
-            throws ParseException, JsonProcessingException, InterruptedException {
+                                  @RequestParam(value = "End_Date", defaultValue = "2022-01-06") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_end,
+                                  HttpServletResponse response)
+            throws Exception {
         //輸入起始時間跟結束時間，顯示這段時間農產品中的"椰子"在"台北二"這個市場中的平均交易量、最大交易量、最低交易量
+
         String type = "農";
         String prodName = "椰子";
         String marketName = "台北二";
@@ -62,8 +55,10 @@ public class TransTypeController {
 
     @ResponseBody
     @GetMapping(value = "/queryExercise_02")
-    public JsonNode getExercise02(@RequestParam(value = "Start_Date", defaultValue = "2022-01-06") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start) throws ParseException, JsonProcessingException, InterruptedException {
+    public JsonNode getExercise02(@RequestParam(value = "Start_Date", defaultValue = "2022-01-06") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start,
+                                  HttpServletResponse response) throws Exception {
         //輸入指定日期，顯示這一天漁產品的總交易金額跟農產品交易總交易金額大小
+
         Long daysDiff = 0L;
         LocalDate start_date = date_start;
         transTypeService.initApiType(start_date, daysDiff, "漁");
@@ -80,8 +75,10 @@ public class TransTypeController {
     @ResponseBody
     @GetMapping(value = "/queryExercise_03")
     public JsonNode getExercise03(@RequestParam(value = "Start_Date", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran,
-                                  @RequestParam(value = "Market_Name") String market_name, @RequestParam(value = "Prod_Name") String prod_name) throws IOException, JSONException {
+                                  @RequestParam(value = "Market_Name") String market_name, @RequestParam(value = "Prod_Name") String prod_name,
+                                  HttpServletResponse response) throws Exception {
         //輸入指定日期跟市場與農產品，顯示過去五天的交易量是否為"嚴格遞增"
+
         LocalDate start_date = date_tran.minusDays(5);
         LocalDate end_date = start_date.plusDays(4);
         Object[] o = {start_date, end_date, market_name, prod_name, "農"};
@@ -122,8 +119,10 @@ public class TransTypeController {
 
     @ResponseBody
     @GetMapping(value = "/queryExercise_04")
-    public JsonNode getExercise04(@RequestParam(value = "Tran_Date", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran) {
+    public JsonNode getExercise04(@RequestParam(value = "Tran_Date", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran,
+                                  HttpServletResponse response) throws Exception {
         //輸入指定日期跟市場與農產品，顯示過去五天的交易量是否為"嚴格遞增"
+
         LocalDate start_date = date_tran.with(TemporalAdjusters.firstDayOfMonth());
         LocalDate end_date = date_tran.with(TemporalAdjusters.lastDayOfMonth());
         log.info("start_date: {}, end_date: {}", start_date, end_date);
@@ -131,43 +130,5 @@ public class TransTypeController {
         JsonNode node = new ObjectMapper().valueToTree(transTypeService.queryExercise(EXERCISE_04, o).toString());
         return node;
     }
+
 }
-/*
-
-
-    @ResponseBody
-    @GetMapping("/queryExercise_02")
-    public JsonNode getExercise02(@RequestParam(value = "Tran_Date", defaultValue = "2021-12-06") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_tran) throws IOException {
-        //輸入指定日期，顯示這一天漁產品的總交易金額跟農產品交易總交易金額大小
-        List<Object> res = new ArrayList<>();
-
-        Map<String, Double> map = new HashMap<>();
-
-        int ariCount = 0;
-        int fishCount = 0;
-        List<TransType> transTypes = transTypeRepository.findMatchByTransDate(date_tran);
-        for(TransType transType: transTypes){
-            double tempTotal = transType.getTransQuantity() * transType.getAvgPrice();
-
-            if(map.containsKey(transType.getProdType())){
-                map.put(transType.getProdType(), tempTotal);
-            } else {
-                map.put(transType.getProdType(), map.get(transType.getProdType() + tempTotal));
-            }
-
-            if(transType.getProdType().equals("農")){
-                ariCount++;
-            }
-            if(transType.getProdType().equals("漁")){
-                fishCount++;
-            }
-        }
-        map.put("農", map.get("農")/ariCount);
-        map.put("漁", map.get("漁")/fishCount);
-
-
-        JsonNode node = new ObjectMapper().readTree((JsonParser) map);
-        log.info(node.toString());
-        return node;
-    }
- */
