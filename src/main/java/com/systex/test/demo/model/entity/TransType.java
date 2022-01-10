@@ -13,8 +13,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static com.systex.test.demo.config.DateConverter.STRING_TO_DATE;
 
 @Slf4j
 @Data
@@ -67,16 +68,8 @@ public class TransType {
     @ApiModelProperty(required = true, dataType = "java.time.LocalDate")
     private Date tranDate;// string 交易日期
 
-    public void setTranDate(String d) throws ParseException {
-        d = d.replace(".","");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String day = d.substring(d.length() - 2);
-        d = d.substring(0, d.length() - day.length());
-        String month = d.substring(d.length() - 2);
-        d = d.substring(0, d.length() - month.length());
-        String year = String.valueOf((Integer.parseInt(d) + 1911));
-        String date = year + "-" + month + "-" + day;
-        this.tranDate = sdf.parse(date);
+    public void setTranDate(String date) throws ParseException {
+        this.tranDate = STRING_TO_DATE(date);
     }
 
     @JsonSetter("CropCode")

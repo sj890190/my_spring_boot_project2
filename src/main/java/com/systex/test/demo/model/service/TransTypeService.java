@@ -1,27 +1,26 @@
 package com.systex.test.demo.model.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.systex.test.demo.model.entity.MarketType;
 import com.systex.test.demo.model.entity.ProdType;
 import com.systex.test.demo.model.entity.TransType;
 import com.systex.test.demo.model.repository.MarketTypeRepository;
 import com.systex.test.demo.model.repository.ProdTypeRepository;
 import com.systex.test.demo.model.repository.TransTypeRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import static com.systex.test.demo.config.DateConverter.DATE_TO_LOCALDATE;
-import static com.systex.test.demo.config.DateConverter.LOCALDATE_TO_STRING;
+import static com.systex.test.demo.DemoApplication.*;
+import static com.systex.test.demo.config.DateConverter.*;
 
 @Slf4j
 @Service
@@ -38,134 +37,166 @@ public class TransTypeService {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public void setAllData(LocalDate startDate, Long daysDiff) throws IOException, ParseException, InterruptedException {
-        //設置參數 - 漁
-        initApiType(startDate, daysDiff, "漁");
-
-        //設置參數 - 農
-        initApiType(startDate, daysDiff, "農");
+    //設置Api的選項, 並透過setApiUrl將Api的參數給Url Map
+    public void initOptionToUrl(String type, boolean hasMarket, boolean hasProd, String tranDate) throws IOException, JSONException {
+        //市場清單
+        List<String> marketNameList = new LinkedList<>();
+        if (hasMarket) {
+            //是否需要開啟市場名稱的參數
+            Iterable<MarketType> marketTypeIterable = marketTypeRepository.findAllByMarketType(type);
+            marketNameList = StreamSupport.stream(marketTypeIterable.spliterator(), false)
+                    .map(MarketType::getMarketName).collect(Collectors.toList());
+        }
+        //產品清單
+        List<String> prodCodeList = new LinkedList<>();
+        if (hasProd) {
+            //是否需要開啟產品代碼的參數
+            Iterable<ProdType> prodTypeIterable = prodTypeRepository.findAllByProdType(type);
+            prodCodeList = StreamSupport.stream(prodTypeIterable.spliterator(), false)
+                    .map(ProdType::getProdCode).collect(Collectors.toList());
+        }
+        //設置Url必要參數至Map中
+        Map<Object, Object> map = new HashMap<>();
+        map.put("start_date", tranDate);
+        map.put("end_date", tranDate);
+        setApiUrl(type, map, marketNameList, prodCodeList); // 建立Api Url Map
     }
+    //將Api的參數給Url Map
+    public void setApiUrl(String type, Map param, List<String> marketNameList, List<String> prodCodeList) throws JSONException, IOException {
+        String url = "", prodTitle = "", marketTitle = "&MarketName={MarketName}";
+        String tranDate = param.get("start_date").toString();
+        Queue<Map> dataList = new LinkedList<>();
 
-    public void initApiType(LocalDate startDate, Long daysDiff, String type)
-            throws ParseException, InterruptedException, JsonProcessingException {
-        String url = "";
-        String symbol = "";
-        //設置參數 - 漁
+        if(type.equals("農")){
+            url = "https://data.coa.gov.tw/api/v1/AgriProductsTransType/";
+            prodTitle = "&CropCode={prodCode}";
+        }
         if(type.equals("漁")){
-            symbol = "";
-            url = "https://data.coa.gov.tw/api/v1/FisheryProductsTransType/?Start_time={start_date}&End_time={end_date}&SeafoodProdCode={prod_Code}";
+            url = "https://data.coa.gov.tw/api/v1/FisheryProductsTransType/";
+            prodTitle= "&SeafoodProdCode={prodCode}";
         }
+        url = url + "?Start_time={start_date}&End_time={end_date}";
 
-        //設置參數 - 農
-        if(type.equals("農")){
-            url = "https://data.coa.gov.tw/api/v1/AgriProductsTransType/?Start_time={start_date}&End_time={end_date}&CropCode={prod_Code}";
-            symbol = ".";
-        }
+        dataList.add(param);
 
-        for(int day= 0; day<=daysDiff; day++){
-            Map<String, String> params = new HashMap<>();
-            LocalDate findDate = startDate.plusDays(day);
-            String tranDate = LOCALDATE_TO_STRING(findDate, symbol);
-            params.put("start_date", tranDate);
-            params.put("end_date", tranDate);
+        //存放多筆條件實的Map參數
+        Queue<Map> paramList = new LinkedList<>();
 
-            Iterator<ProdType> prodTypeIterator = prodTypeRepository.findAllByProdType(type).iterator();
-            while (prodTypeIterator.hasNext()) {
-                ProdType prodType = prodTypeIterator.next();
-                params.put("prod_Code", prodType.getProdCode());
-                initApiInfo(url, params, type, startDate);
-            }
-        }
-    }
-
-    public void initApiType(Date startDate, Date endDate, String type, String prodName, String marketName)
-            throws ParseException, JsonProcessingException, InterruptedException {
-        LocalDate start_date = DATE_TO_LOCALDATE(startDate);
-        LocalDate end_date = DATE_TO_LOCALDATE(endDate);
-
-        String url = "";
-        String symbol = "";
-        long daysDiff = start_date.until(end_date, ChronoUnit.DAYS);
-
-        //設置參數 - 農
-        if(type.equals("農")){
-            url = "https://data.coa.gov.tw/api/v1/AgriProductsTransType/?" +
-                    "Start_time={start_date}&End_time={end_date}&CropName={prod_name}&MarketName={market_name}";
-            symbol = ".";
-        }
-
-        for(int day= 0; day<=daysDiff; day++){
-            Map<String, String> params = new HashMap<>();
-            LocalDate findDate = start_date.plusDays(day);
-            String tranDate = LOCALDATE_TO_STRING(findDate, symbol);
-
-            params.put("start_date", tranDate);
-            params.put("end_date", tranDate);
-            params.put("prod_name", prodName);
-            params.put("market_name", marketName);
-            log.info(url);
-            initApiInfo(url, params, type, start_date);
-        }
-    }
-
-    public void initApiInfo(String url, Map<String, String> params, String type, LocalDate startDate)
-            throws ParseException, JsonProcessingException, InterruptedException {
-        RestTemplate restTemplate = new RestTemplate();
-        String body = restTemplate.getForEntity(url, String.class, params).getBody();
-        if(body != null){
-            setJsonToDB(body, type, startDate);
-        }
-    }
-
-    public void setJsonToDB(String body, String type, LocalDate startDate)
-            throws ParseException, JsonProcessingException, InterruptedException {
-        RestTemplate restTemplate = new RestTemplate();
-        List<TransType> agriFisherList = new LinkedList<>();
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonParentNode = mapper.readTree(body);
-
-        if (jsonParentNode.at("/Next").asText().equals("true")) {
-            //有分頁, 需要增加API的參數
-            log.info("Has Next: True!!!!!!!!!!!!");
-            log.info(jsonParentNode.at("/data").asText());
-        } else {
-            //log.info(body);
-            //轉成JSON Object
-            JsonNode jsonChildNode = jsonParentNode.at("/Data");
-            if (!jsonChildNode.isMissingNode() && !jsonChildNode.isEmpty()) {
-
-                //data不為空, 且沒有分頁可以存入資料庫
-                Iterator<JsonNode> elements = jsonChildNode.elements();
-                Map<String, String> map = new HashMap<>();
-                while (elements.hasNext()) {
-                    //擷取子節點
-                    JsonNode node = elements.next();
-                    //log.info(node.toString());
-
-                    TransType transType = mapper.readValue(node.toString(), TransType.class);
-                    transType.setTranDate(transType.getTransDate().toString());
-                    transType.setProdType(type);
-
-                    log.info(transType.toString());
-                    agriFisherList.add(transType);
-
-                    if (agriFisherList.size() > 500) {
-                        transTypeRepository.saveAll(agriFisherList);
-                        agriFisherList.clear();
-                    }
+        boolean hasMarket = false;
+        if(marketNameList.size() != 0){
+            hasMarket = true;
+            url = url + marketTitle;
+            //log.info("url: {}", url);
+            for(int idx=0; idx<dataList.size(); idx++){
+                Map params = dataList.poll();
+                for(String marketName: marketNameList){
+                    Map addParam = new HashMap(params);
+                    addParam.put("MarketName", marketName);
+                    //log.info("addParam: {}", addParam);
+                    paramList.add(addParam);
                 }
-                transTypeRepository.saveAll(agriFisherList);
-                agriFisherList.clear();
             }
+            dataList = paramList;
+            log.info("Finished Add MarketList");
+        }
+
+        if(prodCodeList.size() != 0){
+            url = url + prodTitle;
+            //log.info("url: {}", url);
+            for(String prodCode: prodCodeList){
+                Map addParam = new HashMap(param);
+                addParam.put("prodCode", prodCode);
+                paramList.add(addParam);
+            }
+            dataList = paramList;
+            log.info("Finished Add ProdList");
+        }
+
+        //將Map透過Url取得Json Data
+        for(int idx=0; idx<dataList.size(); idx++){
+            Map params = dataList.poll();
+            Map dataMap = setUrlToJson(url, params); // 檢視Api的狀態, 並回傳Map
+
+            if(dataMap.containsKey("Next")){
+                log.info("Next Is True: {}", dataMap);
+                if(!hasMarket){
+                    //若有分頁, 則添加市場
+                    initOptionToUrl(type, true, false, tranDate);
+                } else{
+                    //若有分頁, 則添加產品
+                    initOptionToUrl(type, true, true, tranDate);
+                }
+            }else{
+                initUrlToData(type, dataMap, tranDate);
+            }
+        }
+    }
+    //透過Url取得Json Data
+    public void initUrlToData(String type, Map dataMap, String tranDate) {
+
+        // 檢查上一步驟中, 回傳的Map是否要繼續處理的
+        if(dataMap.containsKey("RS")){
+            log.info("RS Status Error, map: {}", dataMap);
+        }
+        // Api回傳的資料中, 狀態沒有下一頁的拆分
+        //log.info("Check Log For Map Content: {}", dataMap);
+        if(!dataMap.containsKey("Data")){
+            TransType transType;
+            for(int i=0; i<dataMap.size(); i++){
+                transType = setMapToEntity(dataMap, i, TransType.class);
+
+                //調整內容至Entity中
+                transType.setProdType(type);//產品型態
+                if(transType.getMarketCode() == null){//產品代碼
+                    String marketName = transType.getMarketName();
+                    //取得市場名稱對應市場代碼
+                    transType.setMarketCode(marketTypeRepository.findTopByMarketName(marketName).getMarketCode());
+                }
+                try {
+                    transType.setTranDate(tranDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                //寫入SQL DB中
+                log.info("Insert To DB: {}", transType);
+                transTypeRepository.save(transType);
+            }
+        }
+    }
+    //檢查資料是否為最新狀態
+    public void checkDataStatus(String marketType, Date date_start, Date data_end){
+        //LocalDate 與 Date轉換成相同格式後, 取得差異天數
+        long diffDays = DATE_DIFF(date_start, data_end);
+        //依照差異的天數每天比較
+        for(int day = 0; day<diffDays; day++){
+            LocalDate checkDate = DATE_TO_LOCALDATE(date_start).plusDays(day);
+            String transDate = LOCALDATE_TO_STRING(checkDate, marketType);
+
+            if(checkDate != LocalDate.now()){ //若不等於當日則檢查有無筆數, 沒有則更新
+                if(transTypeRepository.countByTransDate(transDate) <= 0){
+                    updateData(marketType, transDate);
+                }
+            }else{//若等於當日則強制更新
+                updateData(marketType, transDate);
+            }
+        }
+    }
+    //更新資料庫資料
+    public void updateData(String marketType, String transDate){
+        try {
+            initOptionToUrl(marketType, false, false, transDate);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
     public List<Map<String, Object>> queryExercise(String sql, Object[] o) {
-        log.info("queryExercise=================");
-        for(int i = 0; i<o.length; i++){
-            log.info(o[i].toString());
-        }
+        log.info("queryExercise: array: {}", o.toString());
+        //for(int i = 0; i<o.length; i++){
+        //    log.info(o[i].toString());
+        //}
         List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, o);
         return res;
     }

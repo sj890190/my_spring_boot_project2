@@ -1,9 +1,10 @@
---DROP TABLE IF EXISTS prod_type;
+DROP TABLE IF EXISTS prod_type;
 --DROP TABLE IF EXISTS trans_type;
---DROP TABLE IF EXISTS market_type;
+DROP TABLE IF EXISTS market_type;
 
 CREATE TABLE market_type (
     market_type VARCHAR(1)
+    , market_code VARCHAR(10)
     , market_name VARCHAR(100)
 	--, CONSTRAINT pk_market_type PRIMARY KEY (market_type, market_code, market_name)
 );

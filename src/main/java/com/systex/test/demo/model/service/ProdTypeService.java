@@ -1,20 +1,18 @@
 package com.systex.test.demo.model.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.entity.ProdType;
 import com.systex.test.demo.model.repository.ProdTypeRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.systex.test.demo.DemoApplication.setUrlToJson;
+import static com.systex.test.demo.DemoApplication.setMapToEntity;
 
 @Slf4j
 @Service
@@ -22,56 +20,42 @@ public class ProdTypeService {
     @Autowired
     ProdTypeRepository prodTypeRepository;
 
-    public void setAllData() throws IOException {
-        String url = "";
-        //設置參數 - 農
-        url = "https://data.coa.gov.tw/api/v1/CropType/";
-        initApiInfo(url, "農");
+    public void initApiToData(String type, boolean hasMarket) throws IOException, JSONException {
+        String url = setApiUrl(type); // 建立Api Url
+        Map params = new HashMap<>();
+        Map map = setUrlToJson(url, params); // 檢視Api的狀態, 並回傳Map
+        log.info("Check Log For Map Content: {}", map);
 
-        //設置參數 - 漁
-        url = "https://data.coa.gov.tw/api/v1/SeafoodProdType/";
-        initApiInfo(url, "漁");
-    }
-
-    public void initApiInfo(String url, String type) throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
-        String body = restTemplate.getForEntity(url, String.class).getBody();
-        if(body != null){
-            setJsonToDB(body, type);
+        // 檢查上一步驟中, 回傳的Map是否要繼續處理的
+        if(map.containsKey("RS")){
+            log.info("RS Status Error, map: {}", map);
         }
-    }
-
-    public void setJsonToDB(String body, String type) throws JsonProcessingException {
-        List<ProdType> prodTypeList = new LinkedList<>();
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonParentNode = mapper.readTree(body);
-
-        //log.info(body);
-        //轉成JSON Object
-        JsonNode jsonChildNode = jsonParentNode.at("/Data");
-        if (!jsonChildNode.isMissingNode() && !jsonChildNode.isEmpty()) {
-
-            //data不為空, 且沒有分頁可以存入資料庫
-            Iterator<JsonNode> elements = jsonChildNode.elements();
-            while (elements.hasNext()) {
-                //擷取子節點
-                JsonNode node = elements.next();
-                //log.info(node.toString());
-
-                ProdType prodType = mapper.readValue(node.toString(), ProdType.class);
-                prodType.setProdType(type);
-
-                log.info(prodType.toString());
-                prodTypeList.add(prodType);
-
-                if (prodTypeList.size() > 500) {
-                    prodTypeRepository.saveAll(prodTypeList);
-                    prodTypeList.clear();
+        // Api回傳的資料中, 狀態有沒有下一頁的, 有則拆分
+        if(map.containsKey("Next")){
+            log.info("Next Is True: {}", map);
+            initApiToData(type, true);
+        }else{
+            if(!map.containsKey("Data")){
+                ProdType prodType;
+                for(int i=0; i<map.size(); i++){
+                    prodType = setMapToEntity(map, i, ProdType.class);
+                    //調整內容至Entity中
+                    prodType.setProdType(type);
+                    //寫入SQL DB中
+                    prodTypeRepository.save(prodType);
                 }
             }
-            prodTypeRepository.saveAll(prodTypeList);
-            prodTypeList.clear();
         }
+    }
+
+    public String setApiUrl(String type){
+        String url = "";
+        if(type.equals("農")){
+            url = "https://data.coa.gov.tw/api/v1/CropType/";
+        }
+        if(type.equals("漁")){
+            url = "https://data.coa.gov.tw/api/v1/SeafoodProdType/";
+        }
+        return url;
     }
 }
