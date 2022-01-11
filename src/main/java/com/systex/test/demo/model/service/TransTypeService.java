@@ -198,9 +198,6 @@ public class TransTypeService {
         log.info("queryExercise:");
         List arrList = Arrays.stream(o).collect(Collectors.toList());
         log.info("array: {}", arrList.toString());
-        //for(int i = 0; i<o.length; i++){
-        //    log.info(o[i].toString());
-        //}
         List<Map<String, Object>> res = jdbcTemplate.queryForList(sql, o);
         return res;
     }

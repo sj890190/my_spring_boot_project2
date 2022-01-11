@@ -1,15 +1,22 @@
 <!doctype html>
 <html lang="en" xmlns:th="https://www.thymeleaf.org">
+
 <head>
+  <!-- Required JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <!--
+  <script type="text/javascript" src="../static/js/jquery-3.5.1.min.js" th:src="@{/js/jquery-3.5.1.min.js}"></script>
+  -->
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-
-  <link rel="shortcut icon" href="#">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <!--
   <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+  -->
 
   <title>Hello, Exercise!</title>
 </head>
@@ -56,7 +63,7 @@
                   <button class="btn btn-primary" type="button" id="button_01">
                     Button
                   </button>
-                  <div id="ex_01"></div>
+                  <div id="exer_01"></div>
                 </div>
               </div>
             </div>
@@ -82,7 +89,7 @@
                   <button class="btn btn-primary" type="button" id="button_02">
                     Button
                   </button>
-                  <div id="ex_02"></div>
+                  <div id="exer_02"></div>
                 </div>
 
               </div>
@@ -121,7 +128,7 @@
                   <button class="btn btn-primary" type="button" id="button_03">
                     Button
                   </button>
-                  <div id="ex_03"></div>
+                  <div id="exer_03"></div>
                 </div>
 
               </div>
@@ -145,16 +152,16 @@
                     <fieldset>
                       <label class="col-form-label mt-4" for="transYear_04">指定年份</label>
                       <input type="number" class="form-control is-invalid" id="transYear_04" required="required"
-                        placeholder="確認年份"/>
+                        placeholder="2001" />
                       <span class="validity"></span>
                       <label class="col-form-label mt-4" for="transMonth_04">指定月份</label>
                       <input type="number" class="form-control is-invalid" id="transMonth_04" required="required"
-                        placeholder="確認月份" oninput="setCustomValidity('');" />
+                        placeholder="1" oninput="setCustomValidity('');" />
                     </fieldset>
                     <button class="btn btn-primary" type="button" id="button_04">
                       Button
                     </button>
-                    <div id="ex_04"></div>
+                    <div id="exer_04"></div>
                   </form>
                 </div>
               </div>
@@ -166,31 +173,60 @@
   </div>
   <script>
     $("#button_01").click(function () {
+
       var transDateBegin = $('#transDate_start_01').val();
       var transDateEnd = $('#transDate_end_01').val();
       var marketName = $('#readOnlyMarket_01').val();
       var prodName = $('#readOnlyProd_01').val();
       console.log("取值: ", transDateBegin, transDateEnd, marketName, prodName);
-      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_01?Start_Date=" + transDateBegin +
-        "&End_Date=" + transDateEnd);
+      console.log(transDateBegin && transDateBegin);
 
-      $.get(myUrl, function (data, status) {
-        console.log("Data: " + data + "\nStatus: " + status);
-        $("#ex01").html(data);
-      });
+      if (transDateBegin && transDateEnd) {
+        var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_01?Start_Date=" + transDateBegin +
+          "&End_Date=" + transDateEnd);
+
+        $.get(myUrl, function (data, status) {
+          console.log("Data: " + data + "\nStatus: " + status);
+          $("#exer_01").html(data);
+        });
+      }
+
+      var res = "";
+      if (!transDateBegin) {
+        res += "起始日期不得為空\n";
+      }
+
+      if (!transDateEnd) {
+        res += "結束日期不得為空\n";
+      }
+
+      if (res != "") {
+        alert(res);
+      }
 
     });
 
     $("#button_02").click(function () {
       var transDate = $('#transDate_02').val();
       console.log("取值: ", transDate);
-      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_02?Start_Date=" + transDate);
 
-      $.get(myUrl, function (data, status) {
-        console.log("Data: " + data + "\nStatus: " + status);
-        $("#ex02").html(data);
-      });
+      if (transDate) {
+        var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_02?Start_Date=" + transDate);
 
+        $.get(myUrl, function (data, status) {
+          console.log("Data: " + data + "\nStatus: " + status);
+          $("#exer_02").html(data);
+        });
+      }
+
+      var res = "";
+      if (!transDate) {
+        res += "指定日期不得為空\n";
+      }
+
+      if (res != "") {
+        alert(res);
+      }
     });
 
     $("#button_03").click(function () {
@@ -198,22 +234,42 @@
       var marketName = $('#readOnlyMarket_03').val();
       var prodName = $('#readOnlyProd_03').val();
       console.log("取值: ", transDate, marketName, prodName);
-      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_03?Start_Date=" + transDate +
-        "&Market_Name=" + marketName + "&Prod_Name=" + prodName);
 
-      $.get(myUrl, function (data, status) {
-        console.log("Data: " + data + "\nStatus: " + status);
-        $("#ex03").html(data);
-      });
+      if (transDate && marketName && prodName) {
+        var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_03?Start_Date=" + transDate +
+          "&Market_Name=" + marketName + "&Prod_Name=" + prodName);
+
+        $.get(myUrl, function (data, status) {
+          console.log("Data: " + data + "\nStatus: " + status);
+          $("#exer_03").html(data);
+        });
+      }
+
+      var res = "";
+      if (!transDate) {
+        res += "指定日期不得為空\n";
+      }
+      if (!marketName) {
+        res += "市場名稱不得為空\n";
+      }
+      if (!prodName) {
+        res += "產品不得為空\n";
+      }
+
+      if (res != "") {
+        alert(res);
+      }
     });
 
     $("#button_04").click(function () {
       var yearRegex = /^[^0]\d{3}/;
       var monthRegex = /^[^0]\d?/;
+      var transYear = $("#transYear_04").val();
+      var transMonth = $("#transMonth_04").val();
 
+      console.log(transYear, yearRegex.test(transYear));
+      console.log(transMonth, monthRegex.test(transMonth));
       if (yearRegex.test(transYear) && monthRegex.test(transMonth)) {
-        var transYear = $("transYear_04").val();
-        var transMonth = $("transMonth_04").val();
         console.log("取值: ", transYear, transMonth);
 
         var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_04?Trans_Year=" + transYear +
@@ -221,25 +277,29 @@
 
         $.get(myUrl, function (data, status) {
           console.log("Data: " + data + "\nStatus: " + status);
-          $("#ex04").html(data);
+          $("#exer_04").html(data);
         });
+      } else {
+        var res = "";
+        if (!yearRegex.test(transYear)) {
+          res += "輸入年份應為: 19xx 或 2xxx ...\n";
+        }
+        if (!monthRegex.test(transMonth)) {
+          res += "輸入月份應為: 1 到 12\n";
+        }
+        if (res != "") {
+          alert(res);
+        }
       }
-      if (!yearRegex.test(transYear)) {
-        console.log('輸入年份應為: 19xx 或 2xxx ...');
-        $('#transYear_04')[0].setCustomValidity('輸入年份應為: 19xx 或 2xxx ...');
-        $('#transYear_04').addClass('is-invalid');
-      }
-      if (!monthRegex.test(transMonth)) {
-        console.log('輸入月份應為: 1 到 12');
-        $('#transMonth_04')[0].setCustomValidity('輸入月份應為: 1 到 12');
-        $('#transYear_04').addClass('is-invalid');
-      }
+
     });
   </script>
   <!-- Optional JavaScript; choose one of the two! -->
 
   <!-- Option 1: Bootstrap Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
+  </script>
 
   <!-- Option 2: Separate Popper and Bootstrap JS -->
   <!--

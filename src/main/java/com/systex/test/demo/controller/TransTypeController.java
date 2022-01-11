@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.service.TransTypeService;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -133,13 +135,13 @@ public class TransTypeController {
         }
 
         //依據Flag判斷是否為嚴格遞增
-        String jsonStr = "";
+        JSONObject jsonObject = new JSONObject();
         if (isTrue) {
-            jsonStr = "{\"嚴格遞增\":\"是\"}";
+            jsonObject.put("嚴格遞增","是");
         } else {
-            jsonStr = "{\"嚴格遞增\":\"否\"}";
+            jsonObject.put("嚴格遞增","否");
         }
-        JsonNode node = new ObjectMapper().readTree(jsonStr);
+        JsonNode node = new ObjectMapper().valueToTree(jsonObject.toString());
         return node;
     }
 
