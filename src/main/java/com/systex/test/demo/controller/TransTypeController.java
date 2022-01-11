@@ -1,11 +1,13 @@
 package com.systex.test.demo.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.service.TransTypeService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.Length;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,9 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 import static com.systex.test.demo.config.DateConverter.DATE_TO_STRING;
@@ -25,6 +25,7 @@ import static com.systex.test.demo.config.DateConverter.LOCALDATE_TO_DATE;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/TransType")
+@Api(tags = "交易資訊")
 public class TransTypeController {
 
     @Autowired
@@ -44,12 +45,13 @@ public class TransTypeController {
             " GROUP BY prod_name ORDER BY SUM(trans_quantity) DESC LIMIT 10";
 
     @ResponseBody
-    @GetMapping("/queryExercise_01")
-    //輸入起始時間跟結束時間，顯示這段時間農產品中的"椰子"在"台北二"這個市場中的平均交易量、最大交易量、最低交易量
-    public JsonNode getExercise01(@RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start,
-                                  @RequestParam(value = "End_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_end) throws Exception {
-        //轉成Date
+    @GetMapping(value = "/queryExercise_01", produces = "text/html;charset=UTF-8")
+    @ApiOperation("顯示區間內, 農產品中的「椰子」在「台北二」這個市場中的平均交易量、最大交易量、最低交易量")
+    //輸入起始時間跟結束時間，
+    public String getExercise01(@ApiParam(value = "起始時間", required = true) @RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start,
+                                  @ApiParam(value = "結束時間", required = true) @RequestParam(value = "End_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_end) throws Exception {
         log.info("Exercise_01 Start==================================================");
+        //轉成Date
         log.info("LocalDate start_date: {}", date_start);
         log.info("LocalDate date_end: {}", date_end);
 
@@ -73,14 +75,15 @@ public class TransTypeController {
         Object[] o = {date_start, date_end, type, prodName, marketName};
         JsonNode node = new ObjectMapper().valueToTree(transTypeService.queryExercise(EXERCISE_01, o).toString());
         log.info(node.toString());
-        log.info("Exercise_01 End==================================================");
-        return node;
+        log.info("Exercise_01 End====================================================");
+        return node.toString();
     }
 
     @ResponseBody
-    @GetMapping(value = "/queryExercise_02")
-    //輸入指定日期，顯示這一天漁產品的總交易金額跟農產品交易總交易金額大小
-    public JsonNode getExercise02(@RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start) throws Exception {
+    @GetMapping(value = "/queryExercise_02", produces = "text/html;charset=UTF-8")
+    @ApiOperation("指定日期中, 漁產品的總交易金額跟農產品交易總交易金額大小")
+    public String getExercise02(@ApiParam(value = "指定時間", required = true) @RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_start) throws Exception {
+        log.info("Exercise_02 Start==================================================");
         //轉成Date
         Date start_date = LOCALDATE_TO_DATE(date_start);
         log.info("start_date: {}", start_date);
@@ -95,15 +98,17 @@ public class TransTypeController {
 
         JsonNode node = new ObjectMapper().valueToTree(transTypeService.queryExercise(EXERCISE_02, o).toString());
         log.info(node.toString());
-        return node;
+        log.info("Exercise_02 End====================================================");
+        return node.toString();
     }
 
     @ResponseBody
-    @GetMapping(value = "/queryExercise_03")
-    //輸入指定日期跟市場與農產品，顯示過去五天的交易量是否為"嚴格遞增"
-    public JsonNode getExercise03(@RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran,
-                                  @RequestParam(value = "Market_Name") String market_name,
-                                  @RequestParam(value = "Prod_Name") String prod_name) throws Exception {
+    @GetMapping(value = "/queryExercise_03", produces = "text/html;charset=UTF-8")
+    @ApiOperation("顯示過去五天內, 市場與農產品的交易量是否為「嚴格遞增」")
+    public String getExercise03(@ApiParam(value = "指定日期", required = true) @RequestParam(value = "Start_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran,
+                                  @ApiParam(value = "市場名稱", required = true) @RequestParam(value = "Market_Name") String market_name,
+                                  @ApiParam(value = "產品名稱", required = true) @RequestParam(value = "Prod_Name") String prod_name) throws Exception {
+        log.info("Exercise_03 Start==================================================");
         LocalDate start_date = date_tran.minusDays(5);
         LocalDate end_date = start_date.plusDays(4);
         log.info("start_date: {}", start_date);
@@ -142,19 +147,39 @@ public class TransTypeController {
             jsonObject.put("嚴格遞增","否");
         }
         JsonNode node = new ObjectMapper().valueToTree(jsonObject.toString());
-        return node;
+        /*
+         * 轉成JsonArray
+         * List<Map<String, String>> t = new LinkedList<>();
+         * Map m = new HashMap<>();
+         * if (isTrue) {
+         *   m.put("嚴格遞增","是");
+         * } else {
+         *   m.put("嚴格遞增","否");
+         * }
+         * t.add(m);
+         * JsonNode node = new ObjectMapper().valueToTree(t.toString());
+         */
+        log.info("Exercise_03 End====================================================");
+        return node.toString();
     }
 
     @ResponseBody
-    @GetMapping(value = "/queryExercise_04")
-    //輸入指定月份，顯示當月最暢銷（總交易量）前10名的農產品（不分市場）（當月 Example 10月=10月1號~10月31號）
-    public JsonNode getExercise04(@RequestParam(value = "Trans_Year") @Min(value = 1970)  int tran_year,
-                                  @RequestParam(value = "Trans_Month") @Min(value = 1) @Max(value = 12) int tran_month) {
+    @GetMapping(value = "/queryExercise_04", produces = "text/html;charset=UTF-8")
+    @ApiOperation("顯示指定年月中, 前10名最暢銷（總交易量）的農產品（不分市場）")
+    public String getExercise04(@ApiParam(value = "指定年份", example = "1970") @RequestParam(value = "Trans_Year") @Min(value = 1970)  int tran_year,
+                                @ApiParam(value = "指定年份", example = "1") @RequestParam(value = "Trans_Month") @Min(value = 1) @Max(value = 12) int tran_month) throws JsonProcessingException {
+
+        //public String getExercise04(@ApiParam(name = "指定年份") @RequestParam(value = "Trans_Year") @Min(value = 1970)  int tran_year,
+    //                            @ApiParam(name = "指定月份") @RequestParam(value = "Trans_Month") @Min(value = 1) @Max(value = 12) int tran_month) throws JsonProcessingException {
+        log.info("Exercise_04 Start==================================================");
         log.info("tran_year: {}", tran_year);
         log.info("tran_month: {}", tran_month);
         Object[] o = {tran_year, tran_month, "農"};
         JsonNode node = new ObjectMapper().valueToTree(transTypeService.queryExercise(EXERCISE_04, o).toString());
-        return node;
+        log.info("Exercise_04 End====================================================");
+        //return node;
+        //JsonNode -> Json
+        return new ObjectMapper().writeValueAsString(node);
     }
 
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.systex.test.demo.model.entity.primaryKey.TransTypeRelationPK;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,11 +37,11 @@ public class TransType {
     @Id
     @Column(length = 10)
     @JsonProperty(value = "ProdCode")
-    private String prodCode;// string 農產品代碼
+    private String prodCode;// string 產品代碼
     @Id
     @Column(length = 100)
     @JsonProperty(value = "ProdName")
-    private String prodName;// string 農產品名稱
+    private String prodName;// string 產品名稱
     @Id
     @Column(length = 10)
     @JsonProperty(value = "MarketCode")
@@ -65,7 +66,7 @@ public class TransType {
     @Column(length = 10)
     @JsonIgnore
     @DateTimeFormat(pattern = "yyyy-MM-dd T HH:mm:ss")
-    @ApiModelProperty(required = true, dataType = "java.time.LocalDate")
+    //@ApiModelProperty(value = "交易日期(西元)", required = true, dataType = "java.time.LocalDate")
     private Date tranDate;// string 交易日期
 
     public void setTranDate(String date) throws ParseException {
