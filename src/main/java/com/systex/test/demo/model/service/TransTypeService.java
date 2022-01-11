@@ -127,7 +127,9 @@ public class TransTypeService {
                     initOptionToUrl(type, true, true, tranDate);
                 }
             }else{
-                initUrlToData(type, dataMap, tranDate);
+                if(!dataMap.isEmpty()){
+                    initUrlToData(type, dataMap, tranDate);
+                }
             }
         }
     }
@@ -193,7 +195,9 @@ public class TransTypeService {
     }
 
     public List<Map<String, Object>> queryExercise(String sql, Object[] o) {
-        log.info("queryExercise: array: {}", o.toString());
+        log.info("queryExercise:");
+        List arrList = Arrays.stream(o).collect(Collectors.toList());
+        log.info("array: {}", arrList.toString());
         //for(int i = 0; i<o.length; i++){
         //    log.info(o[i].toString());
         //}

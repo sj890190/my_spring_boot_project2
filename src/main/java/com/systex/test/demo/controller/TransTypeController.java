@@ -4,10 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.systex.test.demo.model.service.TransTypeService;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
@@ -31,7 +35,11 @@ public class TransTypeController {
             " FROM trans_type WHERE tran_date = ? GROUP BY prod_type";
 
     private final static String EXERCISE_03 = "SELECT tran_date, market_name, prod_name, trans_quantity" +
-            " FROM trans_type WHERE tran_date BETWEEN ? AND ? AND market_name = ? AND prod_name = ? AND prod_type = ? ORDER BY tran_date";
+            " FROM trans_type WHERE tran_date BETWEEN ? AND ? AND market_name = ? AND prod_name = ? AND prod_type = ? ORDER BY tran_date ASC";
+
+    private final static String EXERCISE_04 = "SELECT prod_name, SUM(trans_quantity) totalQty" +
+            " FROM uv_tran_data WHERE tran_year = ? AND tran_month = ? AND prod_type = ?" +
+            " GROUP BY prod_name ORDER BY SUM(trans_quantity) DESC LIMIT 10";
 
     @ResponseBody
     @GetMapping("/queryExercise_01")
@@ -96,23 +104,32 @@ public class TransTypeController {
                                   @RequestParam(value = "Prod_Name") String prod_name) throws Exception {
         LocalDate start_date = date_tran.minusDays(5);
         LocalDate end_date = start_date.plusDays(4);
+        log.info("start_date: {}", start_date);
+        log.info("end_date: {}", end_date);
         Object[] o = {start_date, end_date, market_name, prod_name, "農"};
 
-        boolean isTrue = false;
+        boolean isTrue = true;
+        //存放數量, 用來比較是否為嚴格遞增
         Queue<Integer> queue = new LinkedList();
+        //取得查詢結果的List<Map>
         List<Map<String, Object>> list = transTypeService.queryExercise(EXERCISE_03, o);
         for (int i = 0; i < list.size(); i++) {
+            //取得SQL資料存為Map
             Map<String, Object> map = list.get(i);
+            //以field名稱找尋對應的value
             int trans_quantity = Integer.parseInt(map.get("trans_quantity").toString());
+            //若Queue為空, 將Map取得的數量存入並繼續下一個
             if (queue.isEmpty()) {
                 queue.add(trans_quantity);
                 continue;
             }
-            if (!(queue.poll() < trans_quantity)) {
+            //因為是嚴格遞增, 所以只能用小於, 出現大於等於就返回為非嚴格遞增, 否則將數量存入queue
+            if (queue.poll() < trans_quantity) {
+                queue.add(trans_quantity);
+            }else{
                 isTrue = false;
                 break;
             }
-            isTrue = true;
         }
 
         //依據Flag判斷是否為嚴格遞增
@@ -126,19 +143,14 @@ public class TransTypeController {
         return node;
     }
 
-    private final static String EXERCISE_04 = "SELECT prod_name, SUM(trans_quantity)" +
-            "FROM trans_type WHERE tran_date BETWEEN ? AND ? AND prod_type = ?" +
-            " GROUP BY prod_name ORDER BY SUM(trans_quantity) DESC LIMIT 10";
-
     @ResponseBody
     @GetMapping(value = "/queryExercise_04")
-    //輸入指定日期跟市場與農產品，顯示過去五天的交易量是否為"嚴格遞增"
-    public JsonNode getExercise04(@RequestParam(value = "Tran_Date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date_tran) {
-
-        LocalDate start_date = date_tran.with(TemporalAdjusters.firstDayOfMonth());
-        LocalDate end_date = date_tran.with(TemporalAdjusters.lastDayOfMonth());
-        log.info("start_date: {}, end_date: {}", start_date, end_date);
-        Object[] o = {start_date, end_date, "農"};
+    //輸入指定月份，顯示當月最暢銷（總交易量）前10名的農產品（不分市場）（當月 Example 10月=10月1號~10月31號）
+    public JsonNode getExercise04(@RequestParam(value = "Trans_Year") @Min(value = 1970)  int tran_year,
+                                  @RequestParam(value = "Trans_Month") @Min(value = 1) @Max(value = 12) int tran_month) {
+        log.info("tran_year: {}", tran_year);
+        log.info("tran_month: {}", tran_month);
+        Object[] o = {tran_year, tran_month, "農"};
         JsonNode node = new ObjectMapper().valueToTree(transTypeService.queryExercise(EXERCISE_04, o).toString());
         return node;
     }

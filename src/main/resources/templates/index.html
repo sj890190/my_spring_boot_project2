@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+  <link rel="shortcut icon" href="#">
+  <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+
+  <title>Hello, Exercise!</title>
+</head>
+
+<body>
+  <div class="accordion" id="accordionExample">
+    <div class="containter">
+      <div class="row">
+        <div class="col-3">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                輸入起始時間跟結束時間，顯示這段時間農產品中的"椰子"在"台北二"這個市場中的平均交易量、最大交易量、最低交易量
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="form-group">
+                  <label class="col-form-label mt-4" for="transDate_start_01">起始日期</label>
+                  <input type="date" class="form-control" id="transDate_start_01" required="required" />
+                </div>
+
+                <div class="form-group">
+                  <label class="col-form-label mt-4" for="transDate_end_01">結束日期</label>
+                  <input type="date" class="form-control" id="transDate_end_01" required="required" />
+                </div>
+
+                <div class="form-group">
+                  <fieldset>
+                    <label class="form-label mt-4" for="readOnlyMarket_01">市場名稱</label>
+                    <input class="form-control" id="readOnlyMarket_01" type="text" placeholder="台北二" readonly=""
+                      value="台北二" />
+                  </fieldset>
+                </div>
+
+                <div class="form-group">
+                  <fieldset>
+                    <label class="form-label mt-4" for="readOnlyProd_01">產品名稱</label>
+                    <input class="form-control" id="readOnlyProd_01" type="text" placeholder="椰子" readonly=""
+                      value="椰子" />
+                  </fieldset>
+                  <button class="btn btn-primary" type="button" id="button_01">
+                    Button
+                  </button>
+                  <div id="ex_01"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-3">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                輸入指定日期，顯示這一天漁產品的總交易金額跟農產品交易總交易金額大小
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="form-group">
+                  <fieldset>
+                    <label class="col-form-label mt-4" for="transDate_02">指定日期</label>
+                    <input type="date" class="form-control" id="transDate_02" required="required" />
+                  </fieldset>
+                  <button class="btn btn-primary" type="button" id="button_02">
+                    Button
+                  </button>
+                  <div id="ex_02"></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-3">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                輸入指定日期跟市場與農產品，顯示過去五天的交易量是否為"嚴格遞增"
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="form-group">
+                  <label class="col-form-label mt-4" for="transDate_03">指定日期</label>
+                  <input type="date" class="form-control" id="transDate_03" required="required" />
+                </div>
+                <div class="form-group">
+                  <fieldset>
+                    <label class="form-label mt-4" for="readOnlyMarket_03">市場名稱</label>
+                    <input type="text" class="form-control is-invalid" id="readOnlyMarket_03" required="required"
+                      placeholder="台北二" value="台北二" />
+                  </fieldset>
+                </div>
+                <div class="form-group">
+                  <fieldset>
+                    <label class="form-label mt-4" for="readOnlyProd_03">產品名稱</label>
+                    <input type="text" class="form-control is-invalid" id="readOnlyProd_03" required="required"
+                      placeholder="椰子" value="椰子" />
+                  </fieldset>
+                  <button class="btn btn-primary" type="button" id="button_03">
+                    Button
+                  </button>
+                  <div id="ex_03"></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-3">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFour">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+                輸入指定月份，顯示當月最暢銷（總交易量）前10名的農產品（不分市場）（當月
+                Example 10月=10月1號~10月31號）
+              </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="form-group">
+                  <form>
+                    <fieldset>
+                      <label class="col-form-label mt-4" for="transYear_04">指定年份</label>
+                      <input type="number" class="form-control is-invalid" id="transYear_04" required="required"
+                        placeholder="確認年份"/>
+                      <span class="validity"></span>
+                      <label class="col-form-label mt-4" for="transMonth_04">指定月份</label>
+                      <input type="number" class="form-control is-invalid" id="transMonth_04" required="required"
+                        placeholder="確認月份" oninput="setCustomValidity('');" />
+                    </fieldset>
+                    <button class="btn btn-primary" type="button" id="button_04">
+                      Button
+                    </button>
+                    <div id="ex_04"></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    $("#button_01").click(function () {
+      var transDateBegin = $('#transDate_start_01').val();
+      var transDateEnd = $('#transDate_end_01').val();
+      var marketName = $('#readOnlyMarket_01').val();
+      var prodName = $('#readOnlyProd_01').val();
+      console.log("取值: ", transDateBegin, transDateEnd, marketName, prodName);
+      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_01?Start_Date=" + transDateBegin +
+        "&End_Date=" + transDateEnd);
+
+      $.get(myUrl, function (data, status) {
+        console.log("Data: " + data + "\nStatus: " + status);
+        $("#ex01").html(data);
+      });
+
+    });
+
+    $("#button_02").click(function () {
+      var transDate = $('#transDate_02').val();
+      console.log("取值: ", transDate);
+      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_02?Start_Date=" + transDate);
+
+      $.get(myUrl, function (data, status) {
+        console.log("Data: " + data + "\nStatus: " + status);
+        $("#ex02").html(data);
+      });
+
+    });
+
+    $("#button_03").click(function () {
+      var transDate = $('#transDate_03').val();
+      var marketName = $('#readOnlyMarket_03').val();
+      var prodName = $('#readOnlyProd_03').val();
+      console.log("取值: ", transDate, marketName, prodName);
+      var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_03?Start_Date=" + transDate +
+        "&Market_Name=" + marketName + "&Prod_Name=" + prodName);
+
+      $.get(myUrl, function (data, status) {
+        console.log("Data: " + data + "\nStatus: " + status);
+        $("#ex03").html(data);
+      });
+    });
+
+    $("#button_04").click(function () {
+      var yearRegex = /^[^0]\d{3}/;
+      var monthRegex = /^[^0]\d?/;
+
+      if (yearRegex.test(transYear) && monthRegex.test(transMonth)) {
+        var transYear = $("transYear_04").val();
+        var transMonth = $("transMonth_04").val();
+        console.log("取值: ", transYear, transMonth);
+
+        var myUrl = new URL("http://localhost:8080/api/TransType/queryExercise_04?Trans_Year=" + transYear +
+          "&Trans_Month=" + transMonth);
+
+        $.get(myUrl, function (data, status) {
+          console.log("Data: " + data + "\nStatus: " + status);
+          $("#ex04").html(data);
+        });
+      }
+      if (!yearRegex.test(transYear)) {
+        console.log('輸入年份應為: 19xx 或 2xxx ...');
+        $('#transYear_04')[0].setCustomValidity('輸入年份應為: 19xx 或 2xxx ...');
+        $('#transYear_04').addClass('is-invalid');
+      }
+      if (!monthRegex.test(transMonth)) {
+        console.log('輸入月份應為: 1 到 12');
+        $('#transMonth_04')[0].setCustomValidity('輸入月份應為: 1 到 12');
+        $('#transYear_04').addClass('is-invalid');
+      }
+    });
+  </script>
+  <!-- Optional JavaScript; choose one of the two! -->
+
+  <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+  <!-- Option 2: Separate Popper and Bootstrap JS -->
+  <!--
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+  -->
+</body>
+
+</html>

@@ -31,3 +31,9 @@ CREATE TABLE trans_type (
 	, trans_date VARCHAR(10)
 	--, CONSTRAINT pk_agri_products_trans_type PRIMARY KEY (trans_DATE, prod_code, prod_name, market_code, market_name)
 );
+
+CREATE VIEW uv_tran_data AS (
+    SELECT tran_date, market_code, market_name, prod_type, prod_name, prod_code, avg_price, trans_quantity,
+			EXTRACT(YEAR FROM tran_date) tran_year, EXTRACT(MONTH FROM tran_date) tran_month, EXTRACT(DAY FROM tran_date) tran_day
+	FROM trans_type
+)

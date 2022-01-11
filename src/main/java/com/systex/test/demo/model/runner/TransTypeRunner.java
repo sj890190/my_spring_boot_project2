@@ -33,8 +33,8 @@ public class TransTypeRunner implements CommandLineRunner {
         //預設抓取兩日內的資料
         Date endDate = new Date();
         //Date startDate = LOCALDATE_TO_DATE(LocalDate.now().minusDays(2));
-        //Date startDate = LOCALDATE_TO_DATE(LocalDate.now().minusYears(1));
-        Date startDate = LOCALDATE_TO_DATE(LocalDate.now().minusDays(7));
+        Date startDate = LOCALDATE_TO_DATE(LocalDate.now().minusYears(1));
+        //Date startDate = LOCALDATE_TO_DATE(LocalDate.now().minusDays(7));
 
         //檢查資料庫筆數是否需要更新資料
         for(String market: marketTypes){
